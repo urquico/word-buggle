@@ -2,6 +2,8 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useLayoutEffect } from "react";
 import { Button, SimpleGrid, Text, Table, Center } from "@mantine/core";
+import { useViewportSize } from "@mantine/hooks";
+
 import seedrandom from "seedrandom";
 
 import axios from "axios";
@@ -17,6 +19,9 @@ function Matrix({ seed }) {
   const [score, setScore] = useState(0);
   const [prevRow, setPrevRow] = useState(null);
   const [prevCol, setPrevCol] = useState(null);
+
+  const { width } = useViewportSize();
+  const isMobile = width <= 800;
 
   // Generate the matrix on mount and whenever the seed changes
   useLayoutEffect(() => {
@@ -158,8 +163,17 @@ function Matrix({ seed }) {
   };
 
   return (
-    <div style={{ margin: "auto", display: "flex" }}>
-      <div>
+    <SimpleGrid
+      style={{
+        margin: "auto",
+        display: "flex",
+        flexDirection: "column",
+        width: "100vw",
+        height: "100vh",
+      }}
+      cols={1}
+    >
+      <div style={{ width: isMobile ? "100vw" : "50vw", margin: "auto" }}>
         <SimpleGrid>
           <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
             {score}
@@ -187,9 +201,16 @@ function Matrix({ seed }) {
           </Button>
         </SimpleGrid>
       </div>
-      <SimpleGrid style={{ marginLeft: "5rem", marginRight: "5rem" }}>
+      <SimpleGrid
+        style={{
+          marginLeft: "5rem",
+          marginRight: "5rem",
+          margin: "auto",
+          marginTop: "-7rem",
+        }}
+      >
         <Center>
-          <Table highlightOnHover style={{ width: "50vw" }}>
+          <Table highlightOnHover>
             <thead>
               <tr>
                 <th>Word</th>
@@ -201,7 +222,7 @@ function Matrix({ seed }) {
           </Table>
         </Center>
       </SimpleGrid>
-    </div>
+    </SimpleGrid>
   );
 }
 
