@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
 import React, { useState, useLayoutEffect } from "react";
 import { Button, SimpleGrid, Text, Table, Center } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
@@ -10,27 +8,47 @@ import axios from "axios";
 
 import Letter from "./Letter";
 
-function Matrix({ seed }) {
-  const [isGuessing, setIsGuessing] = useState(false);
-  const [guess, setGuess] = useState([]);
-  const [guesses, setGuesses] = useState([]);
-  const [matrix, setMatrix] = useState([[]]);
-  const [selectedMatrix, setSelectedMatrix] = useState([[]]);
-  const [score, setScore] = useState(0);
-  const [prevRow, setPrevRow] = useState(null);
-  const [prevCol, setPrevCol] = useState(null);
+function Matrix() {
+  const initialTime = 180; // initial time
+  const randomSeed = Math.floor(Math.random() * 1000000); // generation of RNG
+  const [seed, setSeed] = useState(randomSeed); // state for generating a seed
+  const [isGuessing, setIsGuessing] = useState(false); // checks if the user is currently guessing or not --> used in Submit Word Button
+  const [guess, setGuess] = useState([]); // current guess from the player --> array of characters
+  const [guesses, setGuesses] = useState([]); // list of guesses in JSON format
+  const [matrix, setMatrix] = useState([[]]); // random letters array
+  const [selectedMatrix, setSelectedMatrix] = useState([[]]); // array for button states
+  const [score, setScore] = useState(0); // score board
+  const [prevRow, setPrevRow] = useState(null); // set to null for first guess
+  const [prevCol, setPrevCol] = useState(null); // set to null for first guess
+  const [seconds, setSeconds] = useState(initialTime); // timer state
+  const [isGameStarted, setIsGameStarted] = useState(false); // check if the player has started the game in order to start the timer
+  const [isFirstGame, setIsFirstGame] = useState(true); // checks if the user plays the game for the first time to avoid reloading of seed
 
-  const { width } = useViewportSize();
-  const isMobile = width <= 800;
+  const { width } = useViewportSize(); // for responsive UI
+  const isMobile = width <= 800; // viewport
 
-  // Generate the matrix on mount and whenever the seed changes
   useLayoutEffect(() => {
+    // Generate the matrix on mount and whenever the seed changes
     generateMatrix(seed);
     generateFalseMatrix(false);
   }, [seed]);
 
-  // Generate a 4x4 matrix of random letters using the given seed
+  useLayoutEffect(() => {
+    // timer
+    let interval = null;
+    if (isGameStarted && seconds > 0) {
+      interval = setInterval(() => {
+        setSeconds((seconds) => seconds - 1);
+      }, 1000);
+    } else if (seconds === 0) {
+      clearInterval(interval);
+      setIsGameStarted(false);
+    }
+    return () => clearInterval(interval);
+  }, [isGameStarted, seconds]);
+
   const generateMatrix = (seed) => {
+    //? This function initializes the game board with a 2D array of random letters.
     const rng = seedrandom(seed);
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const newMatrix = [];
@@ -48,6 +66,8 @@ function Matrix({ seed }) {
   };
 
   const generateFalseMatrix = (val) => {
+    //? This function generates a 2D array of boolean values with all elements set to false.
+    //? This will be used to keep track of which letters have been selected by the player.
     const selected = [];
     for (let i = 0; i < 4; i++) {
       const selectedRow = [];
@@ -60,11 +80,28 @@ function Matrix({ seed }) {
     setSelectedMatrix(selected);
   };
 
+  const startTimer = () => {
+    //? This function sets a timer for the game and initialize states into default values
+    setIsGameStarted(true);
+    setSeconds(initialTime);
+    setGuesses([]);
+    setPrevRow(null);
+    setPrevCol(null);
+    setScore(0);
+    if (!isFirstGame) {
+      setSeed(Math.floor(Math.random() * 1000000));
+    }
+    setIsFirstGame(false);
+  };
+
   const startGuessing = (letter, i, j) => {
+    //? This function is called when a letter is clicked. It updates the selectedMatrix
+    //? array to reflect the selected letter.
     console.log(isAdjacent(prevRow, prevCol, i, j));
     let isValid = false;
     if (prevRow === null || isAdjacent(prevRow, prevCol, i, j)) {
-      // first letter selected
+      //* first selected letter or adjacent buttons
+
       isValid = true;
       setPrevRow(i);
       setPrevCol(j);
@@ -77,18 +114,23 @@ function Matrix({ seed }) {
     }
   };
 
-  const stopGuessing = () => {
-    // setIsGuessing(false);
+  const clickedButton = (i, j) => {
+    //? This function is called when the player clicks a button. It checks which button was clicked
+    const newGrid = [...selectedMatrix];
+    newGrid[i][j] = true;
+    setSelectedMatrix(newGrid);
   };
 
-  const removeRepeatingLetters = (word) => {
-    return word
-      .split("")
-      .filter((letter, index, array) => array.indexOf(letter) === index)
-      .join("");
+  const isAdjacent = (prevRow, prevCol, newRow, newCol) => {
+    //? This function checks if a letter is adjacent to the previous selected letter.
+    //? This is used to ensure that the player is selecting adjacent letters to form a word.
+    const rowDiff = Math.abs(prevRow - newRow);
+    const colDiff = Math.abs(prevCol - newCol);
+    return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
 
   const generatePoint = (word) => {
+    //? This function calculates the point value of the selected word.
     if (word.length === 1) return 0;
     else if (word.length === 2) return 1;
     else if (word.length === 3 || word.length === 4) return 2;
@@ -98,12 +140,13 @@ function Matrix({ seed }) {
   };
 
   const submitWord = () => {
+    //?  This function is called when the player submits a word. It checks if the word is valid,
+    //?  calculates the point value, and updates the score.
     setIsGuessing(false);
-    // const processedWord = removeRepeatingLetters(guess.join(""));
     const processedWord = guess.join("");
     let totalPoints = score;
 
-    const isWordGuessed = !guesses.some((e) => e.word === processedWord);
+    const isWordGuessed = !guesses?.some((e) => e.word === processedWord);
     if (isWordGuessed) {
       const point = generatePoint(processedWord);
       axios
@@ -115,20 +158,21 @@ function Matrix({ seed }) {
             ...current,
             {
               word: processedWord,
-              definition: result.data[0].meanings[0].definitions[0].definition,
+              // definition: result.data[0].meanings[0].definitions[0].definition,
+              remarks: "a word",
               point: point,
             },
           ]);
 
           setScore(totalPoints + point);
         })
-        .catch((error) => {
+        .catch(() => {
           console.log("walang ganon idol");
           setGuesses((current) => [
             ...current,
             {
               word: processedWord,
-              definition: "not a word",
+              remarks: "not a word",
               point: 0,
             },
           ]);
@@ -140,27 +184,16 @@ function Matrix({ seed }) {
     generateFalseMatrix(false);
   };
 
-  const clickedButton = (i, j) => {
-    const newGrid = [...selectedMatrix];
-    newGrid[i][j] = true;
-    setSelectedMatrix(newGrid);
-  };
-
-  const rows = guesses.map((word) => {
+  const rows = guesses?.map((word, index) => {
     return (
       <tr key={word.word}>
-        <td>{word.word}</td>
-        <td>{word.definition}</td>
-        <td>{word.point}</td>
+        <td>{index}</td>
+        <td>{word?.word}</td>
+        <td>{word?.remarks}</td>
+        <td>{word?.point}</td>
       </tr>
     );
   });
-
-  const isAdjacent = (prevRow, prevCol, newRow, newCol) => {
-    const rowDiff = Math.abs(prevRow - newRow);
-    const colDiff = Math.abs(prevCol - newCol);
-    return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
-  };
 
   return (
     <SimpleGrid
@@ -176,6 +209,9 @@ function Matrix({ seed }) {
       <div style={{ width: isMobile ? "100vw" : "50vw", margin: "auto" }}>
         <SimpleGrid>
           <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
+            {seconds}
+          </Text>
+          <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
             {score}
           </Text>
           {matrix.map((row, i) => (
@@ -188,9 +224,10 @@ function Matrix({ seed }) {
                     i={i}
                     j={j}
                     startGuessing={startGuessing}
-                    stopGuessing={stopGuessing}
                     isClicked={selectedMatrix[i][j]}
                     letter={letter}
+                    isGameStarted={isGameStarted}
+                    key={`${i}-${j}`}
                   />
                 );
               })}
@@ -199,6 +236,9 @@ function Matrix({ seed }) {
           <Button color="pink" disabled={!isGuessing} onClick={submitWord}>
             Submit Word
           </Button>
+          <Button color="green" disabled={isGameStarted} onClick={startTimer}>
+            Start Game
+          </Button>
         </SimpleGrid>
       </div>
       <SimpleGrid
@@ -206,15 +246,15 @@ function Matrix({ seed }) {
           marginLeft: "5rem",
           marginRight: "5rem",
           margin: "auto",
-          marginTop: "-7rem",
         }}
       >
         <Center>
           <Table highlightOnHover>
             <thead>
               <tr>
+                <th>#</th>
                 <th>Word</th>
-                <th>Definition</th>
+                <th>Remarks</th>
                 <th>Points</th>
               </tr>
             </thead>
