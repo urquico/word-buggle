@@ -1,6 +1,7 @@
 import React, { useState, useLayoutEffect } from "react";
-import { Button, SimpleGrid, Text, Table, Center } from "@mantine/core";
+import { Button, SimpleGrid, Text, Table, Center, ActionIcon, Tooltip, Drawer } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
+import { IconBook } from "@tabler/icons-react";
 
 import seedrandom from "seedrandom";
 
@@ -8,7 +9,7 @@ import axios from "axios";
 
 import Letter from "./Letter";
 
-function Matrix() {
+function Matrix({ difficulty }) {
   const initialTime = 180; // initial time
   const randomSeed = Math.floor(Math.random() * 1000000); // generation of RNG
   const [seed, setSeed] = useState(randomSeed); // state for generating a seed
@@ -23,6 +24,8 @@ function Matrix() {
   const [seconds, setSeconds] = useState(initialTime); // timer state
   const [isGameStarted, setIsGameStarted] = useState(false); // check if the player has started the game in order to start the timer
   const [isFirstGame, setIsFirstGame] = useState(true); // checks if the user plays the game for the first time to avoid reloading of seed
+
+  const [openDict, setOpenDict] = useState(false);
 
   const { width } = useViewportSize(); // for responsive UI
   const isMobile = width <= 800; // viewport
@@ -50,11 +53,11 @@ function Matrix() {
   const generateMatrix = (seed) => {
     //? This function initializes the game board with a 2D array of random letters.
     const rng = seedrandom(seed);
-    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const letters = "AAAAABCDEEEEFGHIIIIIJKLMNOOOOOPQRSTUUUUUVWXYZ";
     const newMatrix = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < difficulty; i++) {
       const row = [];
-      for (let j = 0; j < 4; j++) {
+      for (let j = 0; j < difficulty; j++) {
         const letter = letters.charAt(Math.floor(rng() * letters.length));
         row.push(letter);
       }
@@ -69,9 +72,9 @@ function Matrix() {
     //? This function generates a 2D array of boolean values with all elements set to false.
     //? This will be used to keep track of which letters have been selected by the player.
     const selected = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < difficulty; i++) {
       const selectedRow = [];
-      for (let j = 0; j < 4; j++) {
+      for (let j = 0; j < difficulty; j++) {
         selectedRow.push(val);
       }
       selected.push(selectedRow);
@@ -129,6 +132,14 @@ function Matrix() {
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
 
+  const convertSecondsToMinutes = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+    return `${formattedMinutes}:${formattedSeconds}`;
+  };
+
   const generatePoint = (word) => {
     //? This function calculates the point value of the selected word.
     if (word.length === 1) return 0;
@@ -184,6 +195,13 @@ function Matrix() {
     generateFalseMatrix(false);
   };
 
+  const clearSelection = () => {
+    generateFalseMatrix(false);
+    setGuess([]);
+    setPrevCol(null);
+    setPrevRow(null);
+  };
+
   const rows = guesses?.map((word, index) => {
     return (
       <tr key={word.word}>
@@ -196,73 +214,86 @@ function Matrix() {
   });
 
   return (
-    <SimpleGrid
-      style={{
-        margin: "auto",
-        display: "flex",
-        flexDirection: "column",
-        width: "100vw",
-        height: "100vh",
-      }}
-      cols={1}
-    >
-      <div style={{ width: isMobile ? "100vw" : "50vw", margin: "auto" }}>
-        <SimpleGrid>
-          <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
-            {seconds}
-          </Text>
-          <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
-            {score}
-          </Text>
-          {matrix.map((row, i) => (
-            <SimpleGrid key={i} cols="4">
-              {row.map((letter, j) => {
-                const color = selectedMatrix[i][j] ? "green" : "blue";
-                return (
-                  <Letter
-                    color={color}
-                    i={i}
-                    j={j}
-                    startGuessing={startGuessing}
-                    isClicked={selectedMatrix[i][j]}
-                    letter={letter}
-                    isGameStarted={isGameStarted}
-                    key={`${i}-${j}`}
-                  />
-                );
-              })}
-            </SimpleGrid>
-          ))}
-          <Button color="pink" disabled={!isGuessing} onClick={submitWord}>
-            Submit Word
-          </Button>
-          <Button color="green" disabled={isGameStarted} onClick={startTimer}>
-            Start Game
-          </Button>
+    <>
+      <Drawer transitionProps={{ transition: "slide-right", duration: 200 }} opened={openDict} onClose={() => setOpenDict(false)}>
+        <SimpleGrid
+          style={{
+            marginLeft: "5rem",
+            marginRight: "5rem",
+            margin: "auto",
+          }}
+        >
+          <Center>
+            <Table highlightOnHover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Word</th>
+                  <th>Remarks</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>{rows}</tbody>
+            </Table>
+          </Center>
         </SimpleGrid>
-      </div>
+      </Drawer>
       <SimpleGrid
         style={{
-          marginLeft: "5rem",
-          marginRight: "5rem",
           margin: "auto",
+          display: "flex",
+          flexDirection: "column",
+          width: "100vw",
+          height: "100vh",
         }}
+        cols={1}
       >
-        <Center>
-          <Table highlightOnHover>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Word</th>
-                <th>Remarks</th>
-                <th>Points</th>
-              </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-          </Table>
-        </Center>
+        <Tooltip label="View Guessed Words" position="right">
+          <ActionIcon style={{ position: "absolute", top: "4rem" }} onClick={() => setOpenDict(true)}>
+            <IconBook size="1.125rem" />
+          </ActionIcon>
+        </Tooltip>
+
+        <div style={{ width: isMobile ? "100vw" : "50vw", margin: "auto" }}>
+          <SimpleGrid>
+            <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
+              {convertSecondsToMinutes(seconds)}
+            </Text>
+            <Text style={{ fontSize: "1.500rem", color: "black", borderRadius: "13px" }} fw={"bolder"} ta="center">
+              {score <= 1 ? <>{score} Point</> : <>{score} Points</>}
+            </Text>
+            {matrix.map((row, i) => (
+              <SimpleGrid key={i} cols={difficulty}>
+                {row.map((letter, j) => {
+                  const color = selectedMatrix[i][j] ? "green" : "blue";
+                  return (
+                    <Letter
+                      color={color}
+                      i={i}
+                      j={j}
+                      startGuessing={startGuessing}
+                      isClicked={selectedMatrix[i][j]}
+                      letter={letter}
+                      isGameStarted={isGameStarted}
+                      key={`${i}-${j}`}
+                    />
+                  );
+                })}
+              </SimpleGrid>
+            ))}
+            <Button color="pink" disabled={!isGuessing} onClick={submitWord}>
+              Submit Word
+            </Button>
+            <Button color="pink" disabled={!isGuessing} onClick={clearSelection}>
+              Clear Selection
+            </Button>
+            <Button color="green" disabled={isGameStarted} onClick={startTimer}>
+              Start Game
+            </Button>
+          </SimpleGrid>
+        </div>
       </SimpleGrid>
-    </SimpleGrid>
+    </>
   );
 }
 

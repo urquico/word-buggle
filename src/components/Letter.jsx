@@ -12,8 +12,8 @@ function Letter(props) {
   };
 
   return (
-    <Button color={color} size="xl" onMouseDown={handleClick} disabled={!isGameStarted}>
-      {letter}
+    <Button color={isGameStarted ? color : "dark"} size="xl" onMouseDown={isGameStarted ? handleClick : ""}>
+      {isGameStarted ? <>{letter}</> : <>?</>}
     </Button>
   );
 }
