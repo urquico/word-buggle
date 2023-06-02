@@ -3,8 +3,7 @@ import PropTypes from "prop-types";
 import { Button } from "@mantine/core";
 
 function Letter(props) {
-  const { color, i, j, startGuessing, letter, isClicked, isGameStarted } =
-    props;
+  const { color, i, j, startGuessing, letter, isClicked, isGameStarted } = props;
 
   const handleClick = () => {
     if (!isClicked) {
@@ -13,12 +12,7 @@ function Letter(props) {
   };
 
   return (
-    <Button
-      color={color}
-      size="xl"
-      onMouseDown={handleClick}
-      disabled={!isGameStarted}
-    >
+    <Button color={color} size="xl" onMouseDown={handleClick} disabled={!isGameStarted}>
       {letter}
     </Button>
   );
