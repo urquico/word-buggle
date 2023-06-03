@@ -23,10 +23,10 @@ const config = {
   colors: ["#f00", "#0f0", "#00f"],
 };
 
-function Matrix({ difficulty, openDict, setOpenDict }) {
-  const initialTime = 180; // initial time
+function Matrix({ difficulty, openDict, setOpenDict, timer, customSeed }) {
+  const initialTime = timer; // initial time
   const randomSeed = Math.floor(Math.random() * 1000000); // generation of RNG
-  const [seed, setSeed] = useState(randomSeed); // state for generating a seed
+  const [seed, setSeed] = useState(customSeed === undefined || customSeed === 0 ? randomSeed : customSeed); // state for generating a seed
   const [isGuessing, setIsGuessing] = useState(false); // checks if the user is currently guessing or not --> used in Submit Word Button
   const [guess, setGuess] = useState([]); // current guess from the player --> array of characters
   const [guesses, setGuesses] = useState([]); // list of guesses in JSON format
@@ -59,6 +59,17 @@ function Matrix({ difficulty, openDict, setOpenDict }) {
       }, 1000);
     } else if (seconds === 0) {
       clearInterval(interval);
+      // const highScores = localStorage.getItem("highScores");
+      // highScores.push(score);
+      const leaderboards = localStorage.getItem("leaderboards");
+      if (leaderboards === null) {
+        localStorage.setItem("leaderboards", score);
+      } else if (leaderboards !== null && isGameStarted) {
+        const newLeaderboards = leaderboards.split(",");
+        newLeaderboards.push(score);
+        localStorage.setItem("leaderboards", newLeaderboards);
+      }
+
       setIsGameStarted(false);
     }
     return () => clearInterval(interval);
@@ -238,7 +249,7 @@ function Matrix({ difficulty, openDict, setOpenDict }) {
         opened={openDict}
         onClose={() => setOpenDict(false)}
         title={
-          <Text fw="bold" fz="xl" style={{ fontFamily: "Cherry Bomb One" }} className="test">
+          <Text fw="bold" fz="xl" style={{ fontFamily: "Cherry Bomb One" }}>
             Dictionary
           </Text>
         }
@@ -273,7 +284,6 @@ function Matrix({ difficulty, openDict, setOpenDict }) {
           flexDirection: "column",
           width: "100vw",
           height: "100vh",
-          marginTop: "-2rem",
         }}
         cols={1}
       >
