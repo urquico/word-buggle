@@ -1,15 +1,29 @@
 import React, { useState, useLayoutEffect } from "react";
-import { Button, SimpleGrid, Text, Table, Center, ActionIcon, Tooltip, Drawer } from "@mantine/core";
+import { Button, SimpleGrid, Text, Table, Center, Drawer } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
-import { IconBook } from "@tabler/icons-react";
 
 import seedrandom from "seedrandom";
+import Confetti from "react-dom-confetti";
 
 import axios from "axios";
 
 import Letter from "./Letter";
 
-function Matrix({ difficulty }) {
+const config = {
+  angle: "213",
+  spread: "360",
+  startVelocity: "32",
+  elementCount: "118",
+  dragFriction: 0.12,
+  duration: "1530",
+  stagger: 3,
+  width: "13px",
+  height: "13px",
+  perspective: "835px",
+  colors: ["#f00", "#0f0", "#00f"],
+};
+
+function Matrix({ difficulty, openDict, setOpenDict }) {
   const initialTime = 180; // initial time
   const randomSeed = Math.floor(Math.random() * 1000000); // generation of RNG
   const [seed, setSeed] = useState(randomSeed); // state for generating a seed
@@ -25,10 +39,10 @@ function Matrix({ difficulty }) {
   const [isGameStarted, setIsGameStarted] = useState(false); // check if the player has started the game in order to start the timer
   const [isFirstGame, setIsFirstGame] = useState(true); // checks if the user plays the game for the first time to avoid reloading of seed
 
-  const [openDict, setOpenDict] = useState(false);
-
   const { width } = useViewportSize(); // for responsive UI
   const isMobile = width <= 800; // viewport
+
+  const [isWord, setIsWord] = useState(false);
 
   useLayoutEffect(() => {
     // Generate the matrix on mount and whenever the seed changes
@@ -53,7 +67,7 @@ function Matrix({ difficulty }) {
   const generateMatrix = (seed) => {
     //? This function initializes the game board with a 2D array of random letters.
     const rng = seedrandom(seed);
-    const letters = "AAAAABCDEEEEFGHIIIIIJKLMNOOOOOPQRSTUUUUUVWXYZ";
+    const letters = "AAABCDEEEEFGHIIIIJKLMNOOOOPQRSTUUUUVWXYZ";
     const newMatrix = [];
     for (let i = 0; i < difficulty; i++) {
       const row = [];
@@ -169,13 +183,14 @@ function Matrix({ difficulty }) {
             ...current,
             {
               word: processedWord,
-              // definition: result.data[0].meanings[0].definitions[0].definition,
+              definition: result.data[0].meanings[0].definitions[0].definition,
               remarks: "a word",
               point: point,
             },
           ]);
 
           setScore(totalPoints + point);
+          setIsWord(true);
         })
         .catch(() => {
           console.log("walang ganon idol");
@@ -183,10 +198,12 @@ function Matrix({ difficulty }) {
             ...current,
             {
               word: processedWord,
+              definition: "",
               remarks: "not a word",
               point: 0,
             },
           ]);
+          setIsWord(false);
         });
     }
     setGuess([]);
@@ -205,8 +222,9 @@ function Matrix({ difficulty }) {
   const rows = guesses?.map((word, index) => {
     return (
       <tr key={word.word}>
-        <td>{index}</td>
+        <td>{index + 1}</td>
         <td>{word?.word}</td>
+        <td>{word?.definition}</td>
         <td>{word?.remarks}</td>
         <td>{word?.point}</td>
       </tr>
@@ -215,7 +233,16 @@ function Matrix({ difficulty }) {
 
   return (
     <>
-      <Drawer transitionProps={{ transition: "slide-right", duration: 200 }} opened={openDict} onClose={() => setOpenDict(false)}>
+      <Drawer
+        transitionProps={{ transition: "slide-right", duration: 200 }}
+        opened={openDict}
+        onClose={() => setOpenDict(false)}
+        title={
+          <Text fw="bold" fz="xl" style={{ fontFamily: "Cherry Bomb One" }} className="test">
+            Dictionary
+          </Text>
+        }
+      >
         <SimpleGrid
           style={{
             marginLeft: "5rem",
@@ -226,9 +253,10 @@ function Matrix({ difficulty }) {
           <Center>
             <Table highlightOnHover>
               <thead>
-                <tr>
+                <tr style={{ fontFamily: "Cherry Bomb One" }}>
                   <th>#</th>
                   <th>Word</th>
+                  <th>Definition</th>
                   <th>Remarks</th>
                   <th>Points</th>
                 </tr>
@@ -245,15 +273,10 @@ function Matrix({ difficulty }) {
           flexDirection: "column",
           width: "100vw",
           height: "100vh",
+          marginTop: "-2rem",
         }}
         cols={1}
       >
-        <Tooltip label="View Guessed Words" position="right">
-          <ActionIcon style={{ position: "absolute", top: "4rem" }} onClick={() => setOpenDict(true)}>
-            <IconBook size="1.125rem" />
-          </ActionIcon>
-        </Tooltip>
-
         <div style={{ width: isMobile ? "100vw" : "50vw", margin: "auto" }}>
           <SimpleGrid>
             <Text style={{ fontSize: "2rem" }} fw={"bolder"} ta="center">
@@ -281,7 +304,17 @@ function Matrix({ difficulty }) {
                 })}
               </SimpleGrid>
             ))}
-            <Button color="pink" disabled={!isGuessing} onClick={submitWord}>
+            <Center>
+              <Confetti active={isWord} config={config} />
+            </Center>
+            <Button
+              color="pink"
+              disabled={!isGuessing}
+              onClick={() => {
+                submitWord();
+                setIsWord(false);
+              }}
+            >
               Submit Word
             </Button>
             <Button color="pink" disabled={!isGuessing} onClick={clearSelection}>
