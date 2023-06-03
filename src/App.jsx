@@ -77,7 +77,7 @@ function App() {
 
       <div style={{ width: "100vw", height: "100vh", display: "flex", justifyContent: "center", placeContent: "center", flexDirection: "column" }}>
         <Center>
-          <Text style={{ fontSize: "4rem", fontFamily: "Cherry Bomb One", color: "black", zIndex: "990" }}>Word Boggle</Text>
+          <Text style={{ fontSize: "4rem", fontFamily: "Cherry Bomb One", color: "black", zIndex: "1" }}>Word Boggle</Text>
         </Center>
         <Group style={{ display: "flex", flexDirection: "column", margin: "auto" }}>
           <Button

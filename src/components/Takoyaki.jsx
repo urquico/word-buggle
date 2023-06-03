@@ -3,9 +3,10 @@ import useSound from "use-sound";
 
 import { IconMusic, IconMusicOff } from "@tabler/icons-react";
 import { ActionIcon } from "@mantine/core";
+import takoyaki from "../assets/takoyaki.mp3";
 
 function Takoyaki({ isTakoyakiPlaying, setIsTakoyakiPlaying }) {
-  const [playSound, { stop }] = useSound("../../src/assets/takoyaki.mp3", { volume: 0.7, interrupt: false });
+  const [playSound, { stop }] = useSound(takoyaki, { volume: 0.7, interrupt: false });
 
   return (
     <div>
