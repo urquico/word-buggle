@@ -32,6 +32,7 @@ function App() {
   return (
     <div style={{ background: `linear-gradient(${"#FEFFCE"}, ${"#ffffff"})` }}>
       <Modal
+        style={{ zIndex: "999" }}
         fullScreen
         transitionProps={{ transition: "slide-up", duration: 200 }}
         opened={start}
@@ -67,8 +68,6 @@ function App() {
         const randomLeft = Math.floor(Math.random() * window.innerWidth) + "px";
         const randomRotate = Math.floor(Math.random() * 360);
 
-        console.log(randomTop, randomLeft, randomRotate);
-
         return (
           <div style={{ position: "absolute", top: randomTop, left: randomLeft, transform: `rotate(${randomRotate}deg)` }} key={index}>
             <Letter color={colors[randomIndex]} letter={letter} isClicked={true} isGameStarted={true} />
@@ -78,7 +77,7 @@ function App() {
 
       <div style={{ width: "100vw", height: "100vh", display: "flex", justifyContent: "center", placeContent: "center", flexDirection: "column" }}>
         <Center>
-          <Text style={{ fontSize: "4rem", fontFamily: "Cherry Bomb One", color: "black", zIndex: "999" }}>Boggle</Text>
+          <Text style={{ fontSize: "4rem", fontFamily: "Cherry Bomb One", color: "black", zIndex: "990" }}>Word Boggle</Text>
         </Center>
         <Group style={{ display: "flex", flexDirection: "column", margin: "auto" }}>
           <Button
