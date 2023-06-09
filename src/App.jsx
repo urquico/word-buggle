@@ -51,7 +51,26 @@ function App() {
           </>
         }
       >
-        <Matrix difficulty={difficulty === "easy" ? 6 : difficulty === "normal" ? 5 : 4} openDict={openDict} setOpenDict={setOpenDict} timer={time} customSeed={customSeed} />
+        <div style={{ opacity: "0.2" }}>
+          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter, index) => {
+            const colors = ["dark", "gray", "red", "pink", "grape", "violet", "indigo", "blue", "cyan", "teal", "green", "lime", "yellow", "orange"];
+            const randomIndex = Math.floor(Math.random() * colors.length);
+
+            const randomTop = Math.floor(Math.random() * window.innerHeight) + "px";
+            const randomLeft = Math.floor(Math.random() * window.innerWidth) + "px";
+            const randomRotate = Math.floor(Math.random() * 360);
+
+            return (
+              <div style={{ position: "absolute", top: randomTop, left: randomLeft, transform: `rotate(${randomRotate}deg)` }} key={index}>
+                <Letter color={colors[randomIndex]} letter={letter} isClicked={true} isGameStarted={true} />
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ zIndex: "999", background: `linear-gradient(${"#fff"}, ${"#FEFFCE"})` }}>
+          <Matrix difficulty={difficulty === "easy" ? 6 : difficulty === "normal" ? 5 : 4} openDict={openDict} setOpenDict={setOpenDict} timer={time} customSeed={customSeed} />
+        </div>
       </Modal>
       <Modal
         style={{ marginLeft: "-4rem" }}
@@ -64,6 +83,7 @@ function App() {
             Customize Difficulty
           </Text>
         }
+        overlayProps={{ opacity: 0.5, blur: 5 }}
       >
         <Select
           label="Pick one"
@@ -95,7 +115,24 @@ function App() {
             Welcome to the Boggle Adventure!
           </Text>
         }
+        overlayProps={{ opacity: 0.5, blur: 5 }}
       >
+        <div style={{ opacity: "0.3" }}>
+          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter, index) => {
+            const colors = ["dark", "gray", "red", "pink", "grape", "violet", "indigo", "blue", "cyan", "teal", "green", "lime", "yellow", "orange"];
+            const randomIndex = Math.floor(Math.random() * colors.length);
+
+            const randomTop = Math.floor(Math.random() * window.innerHeight) + "px";
+            const randomLeft = Math.floor(Math.random() * window.innerWidth) + "px";
+            const randomRotate = Math.floor(Math.random() * 360);
+
+            return (
+              <div style={{ position: "absolute", top: randomTop, left: randomLeft, transform: `rotate(${randomRotate}deg)` }} key={index}>
+                <Letter color={colors[randomIndex]} letter={letter} isClicked={true} isGameStarted={true} />
+              </div>
+            );
+          })}
+        </div>
         <Text style={{ marginBottom: "1rem", textIndent: "1rem" }} ta="justify">
           Get ready to embark on a word-finding journey like no other. Here's everything you need to know to conquer the Boggle challenge and unleash your inner wordsmith:
         </Text>

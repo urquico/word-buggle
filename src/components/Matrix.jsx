@@ -78,7 +78,7 @@ function Matrix({ difficulty, openDict, setOpenDict, timer, customSeed }) {
   const generateMatrix = (seed) => {
     //? This function initializes the game board with a 2D array of random letters.
     const rng = seedrandom(seed);
-    const letters = "AAABCDEEEEFGHIIIIJKLMNOOOOPQRSTUUUUVWXYZ";
+    const letters = "AAABCDEEEFGHIIIJKLMNOOOPQRSTUUUVWXYZ";
     const newMatrix = [];
     for (let i = 0; i < difficulty; i++) {
       const row = [];
@@ -254,6 +254,22 @@ function Matrix({ difficulty, openDict, setOpenDict, timer, customSeed }) {
           </Text>
         }
       >
+        <div style={{ opacity: "0.2" }}>
+          {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter, index) => {
+            const colors = ["dark", "gray", "red", "pink", "grape", "violet", "indigo", "blue", "cyan", "teal", "green", "lime", "yellow", "orange"];
+            const randomIndex = Math.floor(Math.random() * colors.length);
+
+            const randomTop = Math.floor(Math.random() * window.innerHeight) + "px";
+            const randomLeft = Math.floor(Math.random() * window.innerWidth) + "px";
+            const randomRotate = Math.floor(Math.random() * 360);
+
+            return (
+              <div style={{ position: "absolute", top: randomTop, left: randomLeft, transform: `rotate(${randomRotate}deg)` }} key={index}>
+                <Letter color={colors[randomIndex]} letter={letter} isClicked={true} isGameStarted={true} />
+              </div>
+            );
+          })}
+        </div>
         <SimpleGrid
           style={{
             marginLeft: "5rem",
